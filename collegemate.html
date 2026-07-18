@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollegeMate AI — TNEA College Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182444;
+    --ink-soft:#4A5570;
+    --paper:#EEF0F4;
+    --card:#FFFFFF;
+    --line:#D6DAE3;
+    --marigold:#E8A33D;
+    --marigold-deep:#8A5A16;
+    --moss:#3F6B52;
+    --moss-bg:#E4EFE8;
+    --amber:#B87A1E;
+    --amber-bg:#FBEEDA;
+    --vermilion:#B03F2A;
+    --vermilion-bg:#F7E6E2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.55;
+    padding-bottom:60px;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  /* header */
+  header{
+    background:var(--ink);
+    color:#fff;
+    padding:18px 0;
+    position:sticky;top:0;z-index:50;
+  }
+  header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:var(--marigold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:600;color:var(--ink);font-size:17px;
+  }
+  .brand-name{font-family:'Fraunces',serif;font-size:19px;font-weight:600;}
+  .brand-tag{font-size:11px;color:#C7CCDA;font-family:'IBM Plex Mono',monospace;letter-spacing:.03em;}
+  nav{display:flex;gap:4px;flex-wrap:wrap;}
+  nav button{
+    background:transparent;border:0.5px solid rgba(255,255,255,0.18);
+    color:#DDE1EC;padding:8px 14px;border-radius:7px;font-size:13.5px;
+    cursor:pointer;font-family:'Inter',sans-serif;transition:.15s;
+  }
+  nav button:hover{background:rgba(255,255,255,0.08);}
+  nav button.active{background:var(--marigold);color:var(--ink);border-color:var(--marigold);font-weight:600;}
+  .lang-toggle{display:flex;border:0.5px solid rgba(255,255,255,0.25);border-radius:7px;overflow:hidden;}
+  .lang-toggle button{border:none;border-radius:0;background:transparent;}
+  .lang-toggle button.active{background:rgba(255,255,255,0.16);color:#fff;}
+
+  main{max-width:1080px;margin:0 auto;padding:36px 24px 0;}
+
+  /* hero */
+  .hero{padding:20px 0 30px;border-bottom:0.5px solid var(--line);margin-bottom:28px;}
+  .hero h1{font-size:34px;line-height:1.22;max-width:640px;}
+  .hero p{color:var(--ink-soft);margin-top:10px;max-width:560px;font-size:15px;}
+  .hero-stats{display:flex;gap:26px;margin-top:20px;flex-wrap:wrap;}
+  .hero-stat b{display:block;font-family:'Fraunces',serif;font-size:20px;}
+  .hero-stat span{font-size:12px;color:var(--ink-soft);}
+
+  /* predictor form */
+  .predictor{
+    background:var(--card);border:0.5px solid var(--line);border-radius:14px;
+    padding:24px;margin-bottom:32px;
+  }
+  .predictor h2{font-size:17px;margin-bottom:2px;}
+  .predictor .sub{font-size:13px;color:var(--ink-soft);margin-bottom:18px;}
+  .form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;font-weight:500;}
+  .field input,.field select{
+    width:100%;padding:9px 10px;border:0.5px solid var(--line);border-radius:8px;
+    font-size:14px;font-family:'Inter',sans-serif;background:#fff;color:var(--ink);
+  }
+  .field input:focus,.field select:focus{outline:2px solid var(--marigold);outline-offset:1px;}
+  .predict-btn{
+    margin-top:16px;background:var(--ink);color:#fff;border:none;
+    padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .predict-btn:hover{background:#0F1830;}
+  .note{font-size:11.5px;color:var(--ink-soft);margin-top:10px;}
+
+  /* results */
+  .results-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  .results-head h2{font-size:19px;}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--ink-soft);}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot.safe{background:var(--moss);}
+  .dot.mod{background:var(--amber);}
+  .dot.dream{background:var(--vermilion);}
+
+  .stub-list{display:flex;flex-direction:column;gap:12px;margin-bottom:36px;}
+  .stub{
+    display:grid;grid-template-columns:74px 1fr 150px;
+    background:var(--card);border:0.5px solid var(--line);border-radius:12px;overflow:hidden;
+  }
+  .stub-edge{
+    background:repeating-linear-gradient(180deg, transparent 0 6px, var(--line) 6px 7px);
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .stub-edge .tag{
+    writing-mode:vertical-rl;transform:rotate(180deg);font-family:'IBM Plex Mono',monospace;
+    font-size:10px;letter-spacing:.08em;padding:10px 0;font-weight:600;
+  }
+  .stub-edge.safe{background-color:var(--moss-bg);} .stub-edge.safe .tag{color:var(--moss);}
+  .stub-edge.mod{background-color:var(--amber-bg);} .stub-edge.mod .tag{color:var(--amber);}
+  .stub-edge.dream{background-color:var(--vermilion-bg);} .stub-edge.dream .tag{color:var(--vermilion);}
+  .stub-body{padding:14px 16px;border-right:1px dashed var(--line);}
+  .stub-body .college{font-family:'Fraunces',serif;font-size:16px;font-weight:600;}
+  .stub-body .meta{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .stub-body .explain{font-size:12.5px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+  .stub-body .cutoff-line{font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:8px;color:var(--ink);}
+  .stub-gauge{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:2px;}
+  .stub-gauge .pct{font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+  .stub-gauge .pct-label{font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;}
+  .heart-btn{border:none;background:transparent;cursor:pointer;font-size:15px;color:var(--ink-soft);margin-top:4px;}
+  .heart-btn.saved{color:var(--vermilion);}
+
+  .empty{color:var(--ink-soft);font-size:13.5px;padding:24px;background:var(--card);border:0.5px dashed var(--line);border-radius:12px;text-align:center;}
+
+  /* explore */
+  .filter-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .filter-row input,.filter-row select{padding:8px 10px;border:0.5px solid var(--line);border-radius:8px;font-size:13.5px;background:#fff;}
+  .college-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .ccard{background:var(--card);border:0.5px solid var(--line);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:6px;}
+  .ccard-head{display:flex;justify-content:space-between;align-items:flex-start;}
+  .ccard-head .college{font-family:'Fraunces',serif;font-size:15.5px;font-weight:600;line-height:1.25;}
+  .ccard .district{font-size:12px;color:var(--ink-soft);}
+  .badge-row{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0;}
+  .badge{font-size:10.5px;padding:3px 8px;border-radius:20px;font-weight:600;letter-spacing:.02em;}
+  .badge.govt{background:var(--moss-bg);color:var(--moss);}
+  .badge.pvt{background:var(--amber-bg);color:var(--amber-deep,var(--amber));}
+  .kv{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);}
+  .kv b{color:var(--ink);font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .ccard-actions{display:flex;gap:8px;margin-top:8px;}
+  .ccard-actions button{
+    flex:1;font-size:12px;padding:7px;border-radius:7px;border:0.5px solid var(--line);
+    background:#fff;cursor:pointer;color:var(--ink);
+  }
+  .ccard-actions button.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .ccard-actions button:disabled{opacity:.45;cursor:not-allowed;}
+
+  /* compare */
+  .compare-table{width:100%;border-collapse:collapse;background:var(--card);border:0.5px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px;}
+  .compare-table th,.compare-table td{padding:10px 12px;border-bottom:0.5px solid var(--line);text-align:left;}
+  .compare-table th{background:#F6F5F0;font-family:'Fraunces',serif;font-weight:600;font-size:13.5px;}
+  .compare-table td.mono{font-family:'IBM Plex Mono',monospace;}
+
+  footer{max-width:1080px;margin:50px auto 0;padding:20px 24px;border-top:0.5px solid var(--line);font-size:12px;color:var(--ink-soft);}
+
+  @media(max-width:720px){
+    .form-grid{grid-template-columns:1fr 1fr;}
+    .stub{grid-template-columns:44px 1fr;}
+    .stub-gauge{grid-column:1/-1;flex-direction:row;justify-content:space-between;border-top:1px dashed var(--line);}
+    .hero h1{font-size:27px;}
+  }
+
+  /* AI assistant widget */
+  #botFab{
+    position:fixed;right:22px;bottom:22px;width:58px;height:58px;border-radius:50%;
+    background:var(--ink);color:#fff;border:none;cursor:pointer;z-index:200;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px rgba(24,36,68,0.35);transition:transform .15s;
+  }
+  #botFab:hover{transform:scale(1.06);}
+  #botFab svg{width:28px;height:28px;}
+  #botFab .ping{
+    position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;
+    background:var(--marigold);border:2px solid var(--paper);
+  }
+  #botPanel{
+    position:fixed;right:22px;bottom:92px;width:330px;max-width:calc(100vw - 32px);
+    height:440px;max-height:calc(100vh - 140px);
+    background:var(--card);border:0.5px solid var(--line);border-radius:16px;
+    box-shadow:0 12px 32px rgba(24,36,68,0.22);
+    display:none;flex-direction:column;overflow:hidden;z-index:200;
+  }
+  #botPanel.open{display:flex;}
+  .bot-head{background:var(--ink);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;}
+  .bot-head .bicon{width:30px;height:30px;border-radius:50%;background:var(--marigold);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .bot-head .bicon svg{width:17px;height:17px;color:var(--ink);}
+  .bot-head b{font-family:'Fraunces',serif;font-size:14.5px;display:block;}
+  .bot-head span{font-size:11px;color:#C7CCDA;}
+  .bot-close{margin-left:auto;background:transparent;border:none;color:#DDE1EC;font-size:18px;cursor:pointer;line-height:1;}
+  .bot-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--paper);}
+  .bmsg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.45;}
+  .bmsg.bot{background:#fff;border:0.5px solid var(--line);align-self:flex-start;border-bottom-left-radius:3px;}
+  .bmsg.user{background:var(--ink);color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+  .bot-quick{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px;background:var(--paper);}
+  .bot-quick button{font-size:11px;padding:5px 10px;border-radius:20px;border:0.5px solid var(--line);background:#fff;cursor:pointer;color:var(--ink-soft);}
+  .bot-input-row{display:flex;gap:8px;padding:10px;border-top:0.5px solid var(--line);background:#fff;}
+  .bot-input-row input{flex:1;padding:9px 11px;border:0.5px solid var(--line);border-radius:20px;font-size:13px;font-family:'Inter',sans-serif;}
+  .bot-input-row button{background:var(--marigold);color:var(--ink);border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-weight:700;flex-shrink:0;}
+
+  @media(max-width:480px){
+    #botPanel{right:12px;left:12px;width:auto;bottom:84px;}
+    #botFab{right:16px;bottom:16px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div>
+        <div class="brand-name">CollegeMate <span style="color:var(--marigold)">AI</span></div>
+        <div class="brand-tag" id="brandTag">TNEA COUNSELLING GUIDE</div>
+      </div>
+    </div>
+    <nav id="mainNav"></nav>
+    <div class="lang-toggle">
+      <button id="langEn" class="active">EN</button>
+      <button id="langTa">தமிழ்</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="view-predict"></section>
+  <section id="view-explore" style="display:none"></section>
+  <section id="view-favourites" style="display:none"></section>
+  <section id="view-compare" style="display:none"></section>
+</main>
+
+<footer>
+  <p><b>Note:</b> All cutoffs, fees, placement and contact figures on this site are illustrative sample data for demo purposes — not official TNEA figures. Always confirm details on tnea.ac.in and the official college website before making admission decisions.</p>
+</footer>
+
+<!-- AI assistant widget -->
+<button id="botFab" aria-label="Open assistant">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="8" width="16" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/>
+    <circle cx="9" cy="14" r="1.4" fill="currentColor"/>
+    <circle cx="15" cy="14" r="1.4" fill="currentColor"/>
+    <path d="M12 8V5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="12" cy="3.6" r="1.3" fill="currentColor"/>
+    <path d="M4 13H2M22 13h-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  </svg>
+  <span class="ping"></span>
+</button>
+
+<div id="botPanel">
+  <div class="bot-head">
+    <div class="bicon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="8" width="16" height="12" rx="3" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="9" cy="14" r="1.4" fill="currentColor"/>
+        <circle cx="15" cy="14" r="1.4" fill="currentColor"/>
+      </svg>
+    </div>
+    <div>
+      <b id="botTitleTxt">CollegeMate Assistant</b>
+      <span id="botSubTxt">Ask about cutoffs, hostels, placements…</span>
+    </div>
+    <button class="bot-close" id="botClose">✕</button>
+  </div>
+  <div class="bot-body" id="botBody"></div>
+  <div class="bot-quick" id="botQuick"></div>
+  <div class="bot-input-row">
+    <input id="botInput" type="text" placeholder="Type your question…">
+    <button id="botSendBtn">➤</button>
+  </div>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const COLLEGES = [
+  {id:1,name:"PSG College of Technology",district:"Coimbatore",type:"Autonomous",code:"2006",naac:"A++",nirf:63,fee:95000,hostel:true,placement:94,avgPkg:6.2,highPkg:42,recruiters:["TCS","Zoho","Amazon","Infosys"],website:"https://www.psgtech.edu",baseCutoff:196.5,focus:["Placement","Skill Development"]},
+  {id:2,name:"Government College of Technology",district:"Coimbatore",type:"Government",code:"1201",naac:"A+",nirf:112,fee:12000,hostel:true,placement:88,avgPkg:5.1,highPkg:28,recruiters:["TCS","Wipro","Cognizant"],website:"https://www.gct.ac.in",baseCutoff:192.0,focus:["Academic Excellence","Affordable"]},
+  {id:3,name:"Coimbatore Institute of Technology",district:"Coimbatore",type:"Autonomous",code:"2007",naac:"A",nirf:150,fee:78000,hostel:true,placement:85,avgPkg:5.4,highPkg:24,recruiters:["HCL","Zoho","Ford"],website:"https://www.cit.edu.in",baseCutoff:189.0,focus:["Placement","Skill Development"]},
+  {id:4,name:"Kongu Engineering College",district:"Erode",type:"Autonomous",code:"2740",naac:"A++",nirf:151,fee:82000,hostel:true,placement:82,avgPkg:4.8,highPkg:20,recruiters:["TCS","Infosys","Ashok Leyland"],website:"https://www.kongu.ac.in",baseCutoff:182.0,focus:["Skill Development"]},
+  {id:5,name:"Anna University, CEG Campus",district:"Chennai",type:"Government",code:"1014",naac:"A++",nirf:9,fee:16000,hostel:true,placement:91,avgPkg:7.5,highPkg:52,recruiters:["Google","Microsoft","Qualcomm"],website:"https://www.annauniv.edu",baseCutoff:199.0,focus:["Academic Excellence","Research","Placement"]},
+  {id:6,name:"SSN College of Engineering",district:"Chengalpattu",type:"Autonomous",code:"1461",naac:"A++",nirf:66,fee:105000,hostel:true,placement:89,avgPkg:6.0,highPkg:38,recruiters:["Zoho","Adobe","Amazon"],website:"https://www.ssn.edu.in",baseCutoff:190.0,focus:["Placement","Research"]},
+  {id:7,name:"Sri Sivasubramaniya Nadar College (IT)",district:"Chengalpattu",type:"Autonomous",code:"1461",naac:"A++",nirf:66,fee:105000,hostel:true,placement:89,avgPkg:6.0,highPkg:38,recruiters:["Zoho","Adobe","Amazon"],website:"https://www.ssn.edu.in",baseCutoff:190.0,focus:["Placement","Research"]},
+  {id:8,name:"Thiagarajar College of Engineering",district:"Madurai",type:"Autonomous",code:"2732",naac:"A++",nirf:98,fee:76000,hostel:true,placement:86,avgPkg:5.2,highPkg:22,recruiters:["TCS","Cognizant","Bosch"],website:"https://www.tce.edu",baseCutoff:186.0,focus:["Academic Excellence","Skill Development"]},
+  {id:9,name:"Government College of Engineering, Salem",district:"Salem",type:"Government",code:"1204",naac:"A",nirf:165,fee:12000,hostel:true,placement:78,avgPkg:4.3,highPkg:18,recruiters:["TCS","Wipro"],website:"https://www.gceso.ac.in",baseCutoff:178.0,focus:["Affordable","Academic Excellence"]},
+  {id:10,name:"Mepco Schlenk Engineering College",district:"Sivakasi",type:"Autonomous",code:"2742",naac:"A++",nirf:158,fee:68000,hostel:true,placement:80,avgPkg:4.6,highPkg:19,recruiters:["TCS","Infosys","HCL"],website:"https://www.mepcoeng.ac.in",baseCutoff:180.0,focus:["Skill Development","Placement"]},
+  {id:11,name:"Meenakshi Sundararajan Engineering College",district:"Chennai",type:"Private",code:"1309",naac:"A",nirf:0,fee:72000,hostel:false,placement:75,avgPkg:4.1,highPkg:14,recruiters:["Cognizant","TCS"],website:"https://msec.edu.in",baseCutoff:170.0,focus:["Placement"]},
+  {id:12,name:"Government College of Engineering, Tirunelveli",district:"Tirunelveli",type:"Government",code:"1205",naac:"A",nirf:0,fee:12000,hostel:true,placement:76,avgPkg:4.0,highPkg:15,recruiters:["TCS","Zoho"],website:"https://gcetly.ac.in",baseCutoff:176.0,focus:["Affordable","Academic Excellence"]},
+  {id:13,name:"St. Joseph's College of Engineering",district:"Chennai",type:"Private",code:"1317",naac:"A",nirf:0,fee:80000,hostel:true,placement:79,avgPkg:4.2,highPkg:16,recruiters:["Infosys","Cognizant","Capgemini"],website:"https://www.stjosephs.ac.in",baseCutoff:168.0,focus:["Placement"]},
+  {id:14,name:"Kumaraguru College of Technology",district:"Coimbatore",type:"Autonomous",code:"2612",naac:"A++",nirf:130,fee:88000,hostel:true,placement:84,avgPkg:5.0,highPkg:21,recruiters:["Zoho","TCS","L&T"],website:"https://www.kct.ac.in",baseCutoff:184.0,focus:["Skill Development","Placement"]},
+
+  {id:15,name:"Anna University, MIT Campus",district:"Chennai",type:"Government",code:"1015",naac:"A++",nirf:9,fee:16000,hostel:true,placement:90,avgPkg:7.0,highPkg:48,recruiters:["DRDO","ISRO","Qualcomm"],website:"https://www.mitindia.edu",baseCutoff:197.5,focus:["Academic Excellence","Research"]},
+  {id:16,name:"Anna University, ACT Campus (Alagappa College of Tech)",district:"Chennai",type:"Government",code:"1016",naac:"A++",nirf:9,fee:16000,hostel:true,placement:87,avgPkg:6.5,highPkg:36,recruiters:["TCS","Infosys","Shell"],website:"https://www.annauniv.edu",baseCutoff:193.0,focus:["Academic Excellence"]},
+  {id:17,name:"Government College of Engineering, Bargur",district:"Krishnagiri",type:"Government",code:"1206",naac:"B++",nirf:0,fee:12000,hostel:true,placement:70,avgPkg:3.8,highPkg:12,recruiters:["TCS","Wipro"],website:"https://gcebargur.ac.in",baseCutoff:168.0,focus:["Affordable"]},
+  {id:18,name:"Government College of Engineering, Srirangam",district:"Tiruchirappalli",type:"Government",code:"1207",naac:"A",nirf:0,fee:12000,hostel:true,placement:74,avgPkg:4.0,highPkg:14,recruiters:["TCS","Cognizant"],website:"https://gcetrichy.ac.in",baseCutoff:174.0,focus:["Affordable","Academic Excellence"]},
+  {id:19,name:"Government College of Engineering, Dharmapuri",district:"Dharmapuri",type:"Government",code:"1208",naac:"B++",nirf:0,fee:12000,hostel:true,placement:68,avgPkg:3.6,highPkg:11,recruiters:["TCS","HCL"],website:"https://gcedharmapuri.ac.in",baseCutoff:165.0,focus:["Affordable"]},
+  {id:20,name:"Sri Ramakrishna Engineering College",district:"Coimbatore",type:"Autonomous",code:"2611",naac:"A++",nirf:0,fee:75000,hostel:true,placement:81,avgPkg:4.5,highPkg:18,recruiters:["TCS","Zoho","Wabco"],website:"https://www.srec.ac.in",baseCutoff:181.0,focus:["Skill Development","Placement"]},
+  {id:21,name:"Bannari Amman Institute of Technology",district:"Erode",type:"Autonomous",code:"2741",naac:"A++",nirf:151,fee:85000,hostel:true,placement:87,avgPkg:5.3,highPkg:23,recruiters:["TCS","Zoho","Bosch"],website:"https://www.bitsathy.ac.in",baseCutoff:187.0,focus:["Skill Development","Placement"]},
+  {id:22,name:"Erode Sengunthar Engineering College",district:"Erode",type:"Private",code:"2743",naac:"A",nirf:0,fee:60000,hostel:true,placement:72,avgPkg:3.9,highPkg:12,recruiters:["TCS","Cognizant"],website:"https://esec.ac.in",baseCutoff:162.0,focus:["Affordable"]},
+  {id:23,name:"National Engineering College",district:"Thoothukudi",type:"Autonomous",code:"2734",naac:"A++",nirf:0,fee:65000,hostel:true,placement:79,avgPkg:4.3,highPkg:16,recruiters:["TCS","Infosys","HCL"],website:"https://www.nec.edu.in",baseCutoff:176.0,focus:["Skill Development"]},
+  {id:24,name:"Velammal College of Engineering and Technology",district:"Madurai",type:"Autonomous",code:"2733",naac:"A",nirf:0,fee:62000,hostel:true,placement:77,avgPkg:4.1,highPkg:14,recruiters:["TCS","Wipro"],website:"https://www.vcet.ac.in",baseCutoff:174.0,focus:["Skill Development"]},
+  {id:25,name:"Kalasalingam Academy of Research and Education",district:"Virudhunagar",type:"Deemed",code:"2751",naac:"A++",nirf:76,fee:98000,hostel:true,placement:83,avgPkg:4.8,highPkg:26,recruiters:["TCS","Amazon","Cognizant"],website:"https://www.klu.ac.in",baseCutoff:179.0,focus:["Research","Placement"]},
+  {id:26,name:"Rajalakshmi Engineering College",district:"Chengalpattu",type:"Autonomous",code:"1462",naac:"A++",nirf:0,fee:98000,hostel:true,placement:88,avgPkg:5.6,highPkg:30,recruiters:["TCS","Zoho","Amazon"],website:"https://www.rajalakshmi.org",baseCutoff:186.5,focus:["Placement","Skill Development"]},
+  {id:27,name:"Sri Venkateswara College of Engineering",district:"Kanchipuram",type:"Autonomous",code:"1463",naac:"A+",nirf:0,fee:90000,hostel:true,placement:83,avgPkg:5.0,highPkg:22,recruiters:["TCS","Infosys","Renault Nissan"],website:"https://www.svce.ac.in",baseCutoff:181.5,focus:["Placement"]},
+  {id:28,name:"Panimalar Engineering College",district:"Chennai",type:"Private",code:"1310",naac:"A",nirf:0,fee:70000,hostel:true,placement:80,avgPkg:4.3,highPkg:15,recruiters:["TCS","Cognizant","HCL"],website:"https://www.panimalar.ac.in",baseCutoff:172.0,focus:["Placement"]},
+  {id:29,name:"Velammal Engineering College",district:"Chennai",type:"Private",code:"1311",naac:"A",nirf:0,fee:72000,hostel:true,placement:78,avgPkg:4.2,highPkg:14,recruiters:["TCS","Wipro"],website:"https://www.velammal.edu.in",baseCutoff:169.0,focus:["Placement"]},
+  {id:30,name:"R.M.K. Engineering College",district:"Thiruvallur",type:"Autonomous",code:"1464",naac:"A+",nirf:0,fee:80000,hostel:true,placement:81,avgPkg:4.6,highPkg:18,recruiters:["TCS","Infosys","Zoho"],website:"https://www.rmkec.ac.in",baseCutoff:177.0,focus:["Skill Development","Placement"]},
+  {id:31,name:"R.M.D. Engineering College",district:"Thiruvallur",type:"Autonomous",code:"1465",naac:"A",nirf:0,fee:75000,hostel:true,placement:77,avgPkg:4.1,highPkg:15,recruiters:["TCS","Cognizant"],website:"https://www.rmd.ac.in",baseCutoff:171.0,focus:["Skill Development"]},
+  {id:32,name:"S.A. Engineering College",district:"Chennai",type:"Private",code:"1312",naac:"A",nirf:0,fee:68000,hostel:false,placement:74,avgPkg:3.9,highPkg:12,recruiters:["TCS","HCL"],website:"https://www.saec.ac.in",baseCutoff:165.0,focus:["Affordable"]},
+  {id:33,name:"Easwari Engineering College",district:"Chennai",type:"Autonomous",code:"1313",naac:"A",nirf:0,fee:76000,hostel:true,placement:79,avgPkg:4.3,highPkg:16,recruiters:["TCS","Cognizant","Infosys"],website:"https://www.srmeaswari.ac.in",baseCutoff:173.0,focus:["Placement"]},
+  {id:34,name:"B.S. Abdur Rahman Crescent Institute",district:"Chennai",type:"Deemed",code:"1314",naac:"A++",nirf:0,fee:110000,hostel:true,placement:82,avgPkg:5.0,highPkg:20,recruiters:["TCS","Amazon","Cognizant"],website:"https://www.crescent.education",baseCutoff:180.0,focus:["Research","Placement"]},
+  {id:35,name:"St. Joseph's Institute of Technology",district:"Chennai",type:"Autonomous",code:"1318",naac:"A",nirf:0,fee:82000,hostel:true,placement:80,avgPkg:4.4,highPkg:17,recruiters:["TCS","Infosys"],website:"https://www.stjosephstechnology.ac.in",baseCutoff:174.5,focus:["Skill Development"]},
+  {id:36,name:"Loyola-ICAM College of Engineering and Technology",district:"Chennai",type:"Autonomous",code:"1319",naac:"A++",nirf:0,fee:112000,hostel:false,placement:90,avgPkg:6.4,highPkg:32,recruiters:["TCS","Amazon","Ford","Renault"],website:"https://www.licet.ac.in",baseCutoff:191.0,focus:["Placement","Skill Development"]},
+  {id:37,name:"Government College of Engineering, Thanjavur",district:"Thanjavur",type:"Government",code:"1209",naac:"A",nirf:0,fee:12000,hostel:true,placement:73,avgPkg:3.9,highPkg:13,recruiters:["TCS","Wipro"],website:"https://gcetjr.ac.in",baseCutoff:173.0,focus:["Affordable","Academic Excellence"]},
+  {id:38,name:"PSNA College of Engineering and Technology",district:"Dindigul",type:"Autonomous",code:"2735",naac:"A",nirf:0,fee:60000,hostel:true,placement:75,avgPkg:4.0,highPkg:13,recruiters:["TCS","Cognizant"],website:"https://www.psnacet.edu.in",baseCutoff:170.0,focus:["Skill Development"]},
+  {id:39,name:"K.L.N. College of Engineering",district:"Madurai",type:"Autonomous",code:"2736",naac:"A",nirf:0,fee:58000,hostel:true,placement:76,avgPkg:4.0,highPkg:14,recruiters:["TCS","HCL"],website:"https://www.klncet.ac.in",baseCutoff:171.5,focus:["Skill Development"]},
+  {id:40,name:"Government College of Engineering, Bodinayakanur",district:"Theni",type:"Government",code:"1210",naac:"B++",nirf:0,fee:12000,hostel:true,placement:67,avgPkg:3.5,highPkg:10,recruiters:["TCS","Wipro"],website:"https://gcebodi.ac.in",baseCutoff:163.0,focus:["Affordable"]},
+  {id:41,name:"PSR Engineering College",district:"Sivakasi",type:"Private",code:"2744",naac:"B++",nirf:0,fee:52000,hostel:true,placement:65,avgPkg:3.4,highPkg:9,recruiters:["TCS","Cognizant"],website:"https://www.psrec.ac.in",baseCutoff:158.0,focus:["Affordable"]},
+  {id:42,name:"Government College of Engineering, Ramanathapuram",district:"Ramanathapuram",type:"Government",code:"1211",naac:"B++",nirf:0,fee:12000,hostel:true,placement:64,avgPkg:3.4,highPkg:9,recruiters:["TCS","Wipro"],website:"https://gcerpm.ac.in",baseCutoff:157.0,focus:["Affordable"]},
+  {id:43,name:"Alagappa Chettiar Govt College of Engg & Tech",district:"Sivaganga",type:"Government",code:"1212",naac:"A",nirf:0,fee:12000,hostel:true,placement:75,avgPkg:4.0,highPkg:15,recruiters:["TCS","Infosys"],website:"https://www.acgcet.ac.in",baseCutoff:174.0,focus:["Affordable","Academic Excellence"]},
+  {id:44,name:"Anna University Regional Campus, Coimbatore",district:"Coimbatore",type:"Government",code:"1017",naac:"A+",nirf:0,fee:16000,hostel:true,placement:83,avgPkg:5.0,highPkg:20,recruiters:["TCS","Infosys","Cognizant"],website:"https://aucbe.ac.in",baseCutoff:183.0,focus:["Academic Excellence","Affordable"]},
+  {id:45,name:"Anna University Regional Campus, Tirunelveli",district:"Tirunelveli",type:"Government",code:"1018",naac:"A",nirf:0,fee:16000,hostel:true,placement:77,avgPkg:4.2,highPkg:15,recruiters:["TCS","Wipro"],website:"https://tvl.annauniv.edu",baseCutoff:175.0,focus:["Academic Excellence","Affordable"]},
+  {id:46,name:"Anna University Regional Campus, Madurai",district:"Madurai",type:"Government",code:"1019",naac:"A",nirf:0,fee:16000,hostel:true,placement:78,avgPkg:4.3,highPkg:16,recruiters:["TCS","Infosys"],website:"https://aumdu.ac.in",baseCutoff:177.0,focus:["Academic Excellence","Affordable"]},
+  {id:47,name:"Anna University Regional Campus, Tiruchirappalli",district:"Tiruchirappalli",type:"Government",code:"1020",naac:"A",nirf:0,fee:16000,hostel:true,placement:79,avgPkg:4.3,highPkg:16,recruiters:["TCS","Cognizant"],website:"https://autrichy.ac.in",baseCutoff:178.0,focus:["Academic Excellence","Affordable"]},
+  {id:48,name:"K.S. Rangasamy College of Technology",district:"Namakkal",type:"Autonomous",code:"2745",naac:"A++",nirf:0,fee:66000,hostel:true,placement:79,avgPkg:4.3,highPkg:17,recruiters:["TCS","Zoho","Infosys"],website:"https://www.ksrct.ac.in",baseCutoff:176.5,focus:["Skill Development"]},
+  {id:49,name:"Kongunadu College of Engineering and Technology",district:"Tiruchirappalli",type:"Private",code:"2746",naac:"A",nirf:0,fee:58000,hostel:true,placement:70,avgPkg:3.7,highPkg:12,recruiters:["TCS","HCL"],website:"https://www.kongunadu.ac.in",baseCutoff:161.0,focus:["Affordable"]},
+  {id:50,name:"Info Institute of Engineering",district:"Coimbatore",type:"Private",code:"2613",naac:"A",nirf:0,fee:60000,hostel:true,placement:74,avgPkg:3.9,highPkg:13,recruiters:["TCS","Cognizant"],website:"https://www.infoinstitutions.org",baseCutoff:167.0,focus:["Skill Development"]},
+  {id:51,name:"Sri Krishna College of Engineering and Technology",district:"Coimbatore",type:"Autonomous",code:"2614",naac:"A++",nirf:0,fee:80000,hostel:true,placement:85,avgPkg:5.1,highPkg:22,recruiters:["TCS","Zoho","Amazon"],website:"https://www.skcet.ac.in",baseCutoff:183.5,focus:["Skill Development","Placement"]},
+  {id:52,name:"Dr. Mahalingam College of Engineering and Technology",district:"Pollachi",type:"Autonomous",code:"2615",naac:"A++",nirf:0,fee:70000,hostel:true,placement:81,avgPkg:4.6,highPkg:18,recruiters:["TCS","Infosys","L&T"],website:"https://www.mcet.in",baseCutoff:180.0,focus:["Academic Excellence","Skill Development"]},
+  {id:53,name:"C. Abdul Hakeem College of Engineering and Technology",district:"Vellore",type:"Private",code:"1470",naac:"B++",nirf:0,fee:50000,hostel:true,placement:63,avgPkg:3.3,highPkg:9,recruiters:["TCS","Wipro"],website:"https://www.cahcet.edu.in",baseCutoff:155.0,focus:["Affordable"]},
+  {id:54,name:"Adhiyamaan College of Engineering",district:"Hosur",type:"Autonomous",code:"1471",naac:"A",nirf:0,fee:64000,hostel:true,placement:76,avgPkg:4.1,highPkg:14,recruiters:["TCS","Cognizant","Ashok Leyland"],website:"https://www.adhiyamaan.ac.in",baseCutoff:172.5,focus:["Skill Development"]},
+  {id:55,name:"Dr. N.G.P. Institute of Technology",district:"Coimbatore",type:"Autonomous",code:"2616",naac:"A",nirf:0,fee:66000,hostel:true,placement:77,avgPkg:4.2,highPkg:14,recruiters:["TCS","Infosys","Zoho"],website:"https://www.drngpit.ac.in",baseCutoff:175.0,focus:["Skill Development"]},
+];
+
+const BRANCH_ADJ = {"CSE":0,"IT":-1,"AI & DS":-1.5,"ECE":-6,"EEE":-9,"MECH":-15,"CIVIL":-18};
+const COMMUNITY_ADJ = {"OC":0,"BC":-4,"BCM":-6,"MBC":-7,"SC":-16,"SCA":-17,"ST":-18};
+const DISTRICTS = [...new Set(COLLEGES.map(c=>c.district))].sort();
+const FOCUS_TAGS = ["Placement","Skill Development","Academic Excellence","Research","Affordable"];
+
+/* ---------- state ---------- */
+let state = {
+  tab: "predict",
+  lang: "en",
+  favourites: new Set(),
+  compareSet: new Set(),
+  lastResults: null,
+  exploreFilter: {search:"", district:"all", focus:"all", type:"all"},
+};
+
+const T = {
+  en: {tag:"TNEA COUNSELLING GUIDE", navPredict:"Predict", navExplore:"Explore colleges", navFav:"Favourites", navCompare:"Compare",
+    heroTitle:"Find the right engineering college for your cutoff.", heroSub:"Enter your TNEA cutoff and we'll show which Tamil Nadu colleges are a safe bet, a fair shot, or a dream reach — with plain reasons why.",
+    formTitle:"Run a prediction", formSub:"Fill in your details for a personalised list.",
+    lblCutoff:"Cutoff mark", lblCommunity:"Community", lblBranch:"Preferred branch", lblDistrict:"District (optional)",
+    btnPredict:"Predict my colleges", formNote:"Sample dataset — for real counselling always cross-check on tnea.ac.in.",
+    resultsTitle:"Your results", empty:"Enter your cutoff above and run a prediction to see matching colleges.",
+    safe:"Safe", moderate:"Moderate", dream:"Dream",
+    exploreTitle:"Explore all colleges", searchPh:"Search college name", allDistricts:"All districts",
+    save:"Save", saved:"Saved", addCompare:"Add to compare", added:"Added",
+    favTitle:"Your saved colleges", favEmpty:"You haven't saved any colleges yet. Save some from Explore or your prediction results.",
+    compareTitle:"Compare colleges", compareEmpty:"Add up to 3 colleges from Explore or Favourites to compare them side by side.",
+    thCollege:"College", thDistrict:"District", thType:"Type", thFee:"Fee / yr", thPlacement:"Placement %", thAvgPkg:"Avg package", thNaac:"NAAC", thHostel:"Hostel",
+    allFocus:"All strengths", focusLbl:"Strength", typeLbl:"Type", allTypes:"All types",
+    focus_Placement:"Placement", focus_Skill_Development:"Skill Development", focus_Academic_Excellence:"Academic Excellence", focus_Research:"Research", focus_Affordable:"Affordable",
+    botTitle:"CollegeMate Assistant", botSub:"Ask about cutoffs, hostels, placements…", botPh:"Type your question…",
+    botGreet:"Hi! I'm your TNEA assistant. Ask me things like \"safe colleges for 175 cutoff BC CSE\" or \"which colleges have hostel in Coimbatore\".",
+    botSend:"Send",
+  },
+  ta: {tag:"TNEA வழிகாட்டி", navPredict:"கணிப்பு", navExplore:"கல்லூரிகள்", navFav:"பிடித்தவை", navCompare:"ஒப்பீடு",
+    heroTitle:"உங்க cutoff-க்கு சரியான engineering கல்லூரியை கண்டுபிடிங்க.", heroSub:"உங்க TNEA cutoff-ஐ போடுங்க — எந்த கல்லூரி Safe, எது Moderate, எது Dream-ன்னு காரணத்தோட காட்டுறோம்.",
+    formTitle:"கணிப்பு செய்யுங்க", formSub:"Personalised list-க்கு உங்க விவரங்களை பூர்த்தி செய்யுங்க.",
+    lblCutoff:"Cutoff மதிப்பெண்", lblCommunity:"சமூகம்", lblBranch:"விருப்ப Branch", lblDistrict:"மாவட்டம் (விருப்பம்)",
+    btnPredict:"என் கல்லூரிகளை கணிக்கவும்", formNote:"Sample data இது — உண்மையான counselling-க்கு tnea.ac.in-ல் confirm பண்ணுங்க.",
+    resultsTitle:"உங்க முடிவுகள்", empty:"மேலே உங்க cutoff-ஐ போட்டு கணிக்க பட்டனை அழுத்துங்க.",
+    safe:"Safe", moderate:"Moderate", dream:"Dream",
+    exploreTitle:"எல்லா கல்லூரிகளையும் பாருங்க", searchPh:"கல்லூரி பெயர் தேடுங்க", allDistricts:"எல்லா மாவட்டமும்",
+    save:"சேமி", saved:"சேமிக்கப்பட்டது", addCompare:"ஒப்பீட்டில் சேர்", added:"சேர்க்கப்பட்டது",
+    favTitle:"உங்க சேமிக்கப்பட்ட கல்லூரிகள்", favEmpty:"இன்னும் எந்த கல்லூரியும் சேமிக்கவில்லை. Explore அல்லது கணிப்பு முடிவுகளில் இருந்து சேமிக்கலாம்.",
+    compareTitle:"கல்லூரிகளை ஒப்பிடுங்க", compareEmpty:"Explore அல்லது Favourites-ல் இருந்து 3 கல்லூரிகள் வரை சேர்த்து ஒப்பிடலாம்.",
+    thCollege:"கல்லூரி", thDistrict:"மாவட்டம்", thType:"வகை", thFee:"Fee / ஆண்டு", thPlacement:"Placement %", thAvgPkg:"சராசரி Package", thNaac:"NAAC", thHostel:"Hostel",
+    allFocus:"எல்லா வகைகளும்", focusLbl:"பலம்", typeLbl:"வகை", allTypes:"எல்லா Type",
+    focus_Placement:"Placement", focus_Skill_Development:"Skill Development", focus_Academic_Excellence:"Academic Excellence", focus_Research:"Research", focus_Affordable:"Affordable",
+    botTitle:"CollegeMate உதவியாளர்", botSub:"Cutoff, hostel, placement பத்தி கேளுங்க…", botPh:"உங்க கேள்வியை டைப் பண்ணுங்க…",
+    botGreet:"ஹாய்! நான் உங்க TNEA உதவியாளர். \"175 cutoff BC CSE safe colleges\" அல்லது \"Coimbatore-ல hostel உள்ள கல்லூரிகள்\" மாதிரி கேளுங்க.",
+    botSend:"அனுப்பு",
+  }
+};
+function t(key){ return T[state.lang][key]; }
+
+/* ---------- prediction logic ---------- */
+function predict(cutoff, community, branch){
+  const bAdj = BRANCH_ADJ[branch] ?? 0;
+  const cAdj = COMMUNITY_ADJ[community] ?? 0;
+  return COLLEGES.map(col=>{
+    const threshold = col.baseCutoff + bAdj + cAdj;
+    const diff = cutoff - threshold;
+    let category;
+    if(diff >= 3) category = "safe";
+    else if(diff >= -3) category = "moderate";
+    else if(diff >= -14) category = "dream";
+    else category = null;
+    const chance = Math.max(5, Math.min(97, Math.round(50 + diff*4)));
+    return {col, threshold: Math.round(threshold*10)/10, diff: Math.round(diff*10)/10, category, chance};
+  }).filter(r=>r.category)
+    .sort((a,b)=>b.diff-a.diff);
+}
+
+function explainText(r, branch){
+  const name = r.col.name.split(",")[0];
+  if(r.category==="safe"){
+    return `Your cutoff clears the ${branch} range at ${name} by about ${Math.abs(r.diff)} marks — a comfortable margin based on last year's closing trend.`;
+  } else if(r.category==="moderate"){
+    return `You're close to the ${branch} closing mark at ${name} (within ${Math.abs(r.diff)} marks). Keep it on your list, but pair it with 2-3 safer backups.`;
+  } else {
+    return `${name} typically closes ${Math.abs(r.diff)} marks above your cutoff for ${branch}. Worth trying in later rounds, but treat it as a reach.`;
+  }
+}
+
+/* ---------- rendering ---------- */
+function renderNav(){
+  const tabs = [["predict","navPredict"],["explore","navExplore"],["favourites","navFav"],["compare","navCompare"]];
+  document.getElementById("mainNav").innerHTML = tabs.map(([id,key])=>
+    `<button data-tab="${id}" class="${state.tab===id?'active':''}">${t(key)}</button>`
+  ).join("");
+  document.getElementById("brandTag").textContent = t("tag");
+  document.querySelectorAll("#mainNav button").forEach(b=>{
+    b.onclick = ()=>{ state.tab = b.dataset.tab; renderAll(); };
+  });
+}
+
+function gaugeColor(cat){ return cat==="safe" ? "safe" : cat==="moderate" ? "mod" : "dream"; }
+
+function renderPredict(){
+  const el = document.getElementById("view-predict");
+  const communities = Object.keys(COMMUNITY_ADJ);
+  const branches = Object.keys(BRANCH_ADJ);
+  el.innerHTML = `
+    <div class="hero">
+      <h1>${t("heroTitle")}</h1>
+      <p>${t("heroSub")}</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>${COLLEGES.length}</b><span>colleges in dataset</span></div>
+        <div class="hero-stat"><b>${branches.length}</b><span>branches covered</span></div>
+        <div class="hero-stat"><b>EN / TA</b><span>bilingual interface</span></div>
+      </div>
+    </div>
+    <div class="predictor">
+      <h2>${t("formTitle")}</h2>
+      <div class="sub">${t("formSub")}</div>
+      <div class="form-grid">
+        <div class="field"><label>${t("lblCutoff")}</label><input id="inCutoff" type="number" min="0" max="200" step="0.5" placeholder="e.g. 178.5"></div>
+        <div class="field"><label>${t("lblCommunity")}</label><select id="inCommunity">${communities.map(c=>`<option value="${c}">${c}</option>`).join("")}</select></div>
+        <div class="field"><label>${t("lblBranch")}</label><select id="inBranch">${branches.map(b=>`<option value="${b}">${b}</option>`).join("")}</select></div>
+        <div class="field"><label>${t("lblDistrict")}</label><select id="inDistrict"><option value="all">${t("allDistricts")}</option>${DISTRICTS.map(d=>`<option value="${d}">${d}</option>`).join("")}</select></div>
+      </div>
+      <button class="predict-btn" id="btnPredict">${t("btnPredict")}</button>
+      <div class="note">${t("formNote")}</div>
+    </div>
+    <div class="results-head">
+      <h2>${t("resultsTitle")}</h2>
+      <div class="legend">
+        <span><span class="dot safe"></span>${t("safe")}</span>
+        <span><span class="dot mod"></span>${t("moderate")}</span>
+        <span><span class="dot dream"></span>${t("dream")}</span>
+      </div>
+    </div>
+    <div id="resultsBox"></div>
+  `;
+  document.getElementById("btnPredict").onclick = ()=>{
+    const cutoff = parseFloat(document.getElementById("inCutoff").value);
+    if(!cutoff || cutoff<=0){ document.getElementById("resultsBox").innerHTML = `<div class="empty">${t("empty")}</div>`; return; }
+    const community = document.getElementById("inCommunity").value;
+    const branch = document.getElementById("inBranch").value;
+    const district = document.getElementById("inDistrict").value;
+    let results = predict(cutoff, community, branch);
+    if(district!=="all") results = results.filter(r=>r.col.district===district);
+    state.lastResults = {results, branch};
+    renderResults();
+  };
+  if(state.lastResults){ renderResults(); }
+  else { document.getElementById("resultsBox").innerHTML = `<div class="empty">${t("empty")}</div>`; }
+}
+
+function renderResults(){
+  const box = document.getElementById("resultsBox");
+  if(!box) return;
+  const {results, branch} = state.lastResults;
+  if(results.length===0){ box.innerHTML = `<div class="empty">${t("empty")}</div>`; return; }
+  box.innerHTML = `<div class="stub-list">${results.map(r=>{
+    const g = gaugeColor(r.category);
+    const label = r.category==="safe"?t("safe"):r.category==="moderate"?t("moderate"):t("dream");
+    const isFav = state.favourites.has(r.col.id);
+    return `
+    <div class="stub">
+      <div class="stub-edge ${g}"><span class="tag">${label}</span></div>
+      <div class="stub-body">
+        <div class="college">${r.col.name}</div>
+        <div class="meta">${r.col.district} · ${r.col.type} · Code ${r.col.code}</div>
+        <div class="explain">${explainText(r, branch)}</div>
+        <div class="cutoff-line">threshold ≈ ${r.threshold} &nbsp;|&nbsp; diff ${r.diff>0?'+':''}${r.diff}</div>
+      </div>
+      <div class="stub-gauge">
+        <div class="pct">${r.chance}%</div>
+        <div class="pct-label">chance</div>
+        <button class="heart-btn ${isFav?'saved':''}" data-fav="${r.col.id}">${isFav?'♥':'♡'}</button>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
+  box.querySelectorAll("[data-fav]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = parseInt(btn.dataset.fav);
+      state.favourites.has(id) ? state.favourites.delete(id) : state.favourites.add(id);
+      renderResults();
+    };
+  });
+}
+
+function renderExplore(){
+  const el = document.getElementById("view-explore");
+  const types = [...new Set(COLLEGES.map(c=>c.type))].sort();
+  el.innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:14px;">${t("exploreTitle")}</h2>
+    <div class="filter-row">
+      <input id="exSearch" placeholder="${t('searchPh')}" value="${state.exploreFilter.search}">
+      <select id="exDistrict"><option value="all">${t('allDistricts')}</option>${DISTRICTS.map(d=>`<option value="${d}" ${state.exploreFilter.district===d?'selected':''}>${d}</option>`).join("")}</select>
+      <select id="exFocus"><option value="all">${t('allFocus')}</option>${FOCUS_TAGS.map(f=>`<option value="${f}" ${state.exploreFilter.focus===f?'selected':''}>${t('focus_'+f.replace(/ /g,'_'))}</option>`).join("")}</select>
+      <select id="exType"><option value="all">${t('allTypes')}</option>${types.map(ty=>`<option value="${ty}" ${state.exploreFilter.type===ty?'selected':''}>${ty}</option>`).join("")}</select>
+    </div>
+    <div class="college-grid" id="exGrid"></div>
+  `;
+  document.getElementById("exSearch").oninput = e=>{ state.exploreFilter.search = e.target.value; drawExploreGrid(); };
+  document.getElementById("exDistrict").onchange = e=>{ state.exploreFilter.district = e.target.value; drawExploreGrid(); };
+  document.getElementById("exFocus").onchange = e=>{ state.exploreFilter.focus = e.target.value; drawExploreGrid(); };
+  document.getElementById("exType").onchange = e=>{ state.exploreFilter.type = e.target.value; drawExploreGrid(); };
+  drawExploreGrid();
+}
+
+function collegeCard(col){
+  const isFav = state.favourites.has(col.id);
+  const inCompare = state.compareSet.has(col.id);
+  return `
+  <div class="ccard">
+    <div class="ccard-head">
+      <div class="college">${col.name}</div>
+    </div>
+    <div class="district">${col.district} · Code ${col.code}</div>
+    <div class="badge-row">
+      <span class="badge ${col.type==='Government'?'govt':'pvt'}">${col.type}</span>
+      <span class="badge" style="background:#EEECE3;color:var(--ink-soft)">NAAC ${col.naac}</span>
+    </div>
+    <div class="badge-row">
+      ${(col.focus||[]).map(f=>`<span class="badge" style="background:#EAF1FB;color:#2B5D8C">${t('focus_'+f.replace(/ /g,'_'))}</span>`).join("")}
+    </div>
+    <div class="kv"><span>Fee / yr</span><b>₹${col.fee.toLocaleString('en-IN')}</b></div>
+    <div class="kv"><span>Placement</span><b>${col.placement}%</b></div>
+    <div class="kv"><span>Avg package</span><b>₹${col.avgPkg} LPA</b></div>
+    <div class="kv"><span>Hostel</span><b>${col.hostel?'Yes':'No'}</b></div>
+    <div class="ccard-actions">
+      <button data-fav="${col.id}">${isFav?'♥ '+t('saved'):'♡ '+t('save')}</button>
+      <button class="primary" data-cmp="${col.id}" ${!inCompare && state.compareSet.size>=3 ? 'disabled':''}>${inCompare?'✓ '+t('added'):t('addCompare')}</button>
+    </div>
+  </div>`;
+}
+
+function drawExploreGrid(){
+  const grid = document.getElementById("exGrid");
+  const {search, district, focus, type} = state.exploreFilter;
+  const list = COLLEGES.filter(c=>
+    (district==="all"||c.district===district) &&
+    (focus==="all"||(c.focus||[]).includes(focus)) &&
+    (type==="all"||c.type===type) &&
+    c.name.toLowerCase().includes(search.toLowerCase())
+  );
+  grid.innerHTML = list.map(collegeCard).join("") || `<div class="empty">No colleges match.</div>`;
+  bindCardActions(grid, renderExplore);
+}
+
+function bindCardActions(container, rerenderFn){
+  container.querySelectorAll("[data-fav]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = parseInt(btn.dataset.fav);
+      state.favourites.has(id) ? state.favourites.delete(id) : state.favourites.add(id);
+      rerenderFn();
+    };
+  });
+  container.querySelectorAll("[data-cmp]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = parseInt(btn.dataset.cmp);
+      if(state.compareSet.has(id)) state.compareSet.delete(id);
+      else if(state.compareSet.size<3) state.compareSet.add(id);
+      rerenderFn();
+    };
+  });
+}
+
+function renderFavourites(){
+  const el = document.getElementById("view-favourites");
+  const list = COLLEGES.filter(c=>state.favourites.has(c.id));
+  el.innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:14px;">${t("favTitle")}</h2>
+    ${list.length===0 ? `<div class="empty">${t("favEmpty")}</div>` : `<div class="college-grid" id="favGrid">${list.map(collegeCard).join("")}</div>`}
+  `;
+  const grid = document.getElementById("favGrid");
+  if(grid) bindCardActions(grid, renderFavourites);
+}
+
+function renderCompare(){
+  const el = document.getElementById("view-compare");
+  const list = COLLEGES.filter(c=>state.compareSet.has(c.id));
+  if(list.length===0){
+    el.innerHTML = `<h2 style="font-size:20px;margin-bottom:14px;">${t("compareTitle")}</h2><div class="empty">${t("compareEmpty")}</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <h2 style="font-size:20px;margin-bottom:14px;">${t("compareTitle")}</h2>
+    <div style="overflow-x:auto;">
+    <table class="compare-table">
+      <tr><th></th>${list.map(c=>`<th>${c.name}</th>`).join("")}</tr>
+      <tr><td>${t("thDistrict")}</td>${list.map(c=>`<td>${c.district}</td>`).join("")}</tr>
+      <tr><td>${t("thType")}</td>${list.map(c=>`<td>${c.type}</td>`).join("")}</tr>
+      <tr><td>${t("thFee")}</td>${list.map(c=>`<td class="mono">₹${c.fee.toLocaleString('en-IN')}</td>`).join("")}</tr>
+      <tr><td>${t("thPlacement")}</td>${list.map(c=>`<td class="mono">${c.placement}%</td>`).join("")}</tr>
+      <tr><td>${t("thAvgPkg")}</td>${list.map(c=>`<td class="mono">₹${c.avgPkg} LPA</td>`).join("")}</tr>
+      <tr><td>${t("thNaac")}</td>${list.map(c=>`<td>${c.naac}</td>`).join("")}</tr>
+      <tr><td>${t("thHostel")}</td>${list.map(c=>`<td>${c.hostel?'Yes':'No'}</td>`).join("")}</tr>
+      <tr><td>${t("focusLbl")}</td>${list.map(c=>`<td>${(c.focus||[]).map(f=>t('focus_'+f.replace(/ /g,'_'))).join(", ")}</td>`).join("")}</tr>
+    </table>
+    </div>
+  `;
+}
+
+function renderAll(){
+  renderNav();
+  ["predict","explore","favourites","compare"].forEach(id=>{
+    document.getElementById("view-"+id).style.display = state.tab===id ? "block" : "none";
+  });
+  if(state.tab==="predict") renderPredict();
+  if(state.tab==="explore") renderExplore();
+  if(state.tab==="favourites") renderFavourites();
+  if(state.tab==="compare") renderCompare();
+}
+
+document.getElementById("langEn").onclick = ()=>{ state.lang="en"; document.getElementById("langEn").classList.add("active"); document.getElementById("langTa").classList.remove("active"); renderAll(); refreshBotChrome(); };
+document.getElementById("langTa").onclick = ()=>{ state.lang="ta"; document.getElementById("langTa").classList.add("active"); document.getElementById("langEn").classList.remove("active"); renderAll(); refreshBotChrome(); };
+
+renderAll();
+
+/* ============ AI assistant (rule-based, runs fully client-side) ============ */
+let botOpened = false;
+let botHistory = [];
+
+function refreshBotChrome(){
+  document.getElementById("botTitleTxt").textContent = t("botTitle");
+  document.getElementById("botSubTxt").textContent = t("botSub");
+  document.getElementById("botInput").placeholder = t("botPh");
+  renderBotQuick();
+}
+
+function addBotMsg(text, who){
+  botHistory.push({text, who});
+  const body = document.getElementById("botBody");
+  const div = document.createElement("div");
+  div.className = "bmsg " + who;
+  div.textContent = text;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function renderBotQuick(){
+  const quick = document.getElementById("botQuick");
+  const suggestions = state.lang==="ta"
+    ? ["175 cutoff BC CSE safe colleges","Coimbatore hostel கல்லூரிகள்","best placement colleges","affordable government colleges"]
+    : ["safe colleges for 175 cutoff BC CSE","colleges with hostel in Coimbatore","best placement colleges","affordable government colleges"];
+  quick.innerHTML = suggestions.map(s=>`<button data-q="${s}">${s}</button>`).join("");
+  quick.querySelectorAll("button").forEach(b=>{
+    b.onclick = ()=>{ document.getElementById("botInput").value = b.dataset.q; handleBotSend(); };
+  });
+}
+
+function openBot(){
+  document.getElementById("botPanel").classList.add("open");
+  document.getElementById("botFab").querySelector(".ping").style.display = "none";
+  if(!botOpened){
+    botOpened = true;
+    refreshBotChrome();
+    addBotMsg(t("botGreet"), "bot");
+  }
+}
+
+document.getElementById("botFab").onclick = ()=>{
+  const panel = document.getElementById("botPanel");
+  panel.classList.contains("open") ? panel.classList.remove("open") : openBot();
+};
+document.getElementById("botClose").onclick = ()=> document.getElementById("botPanel").classList.remove("open");
+document.getElementById("botSendBtn").onclick = handleBotSend;
+document.getElementById("botInput").addEventListener("keydown", e=>{ if(e.key==="Enter") handleBotSend(); });
+
+function handleBotSend(){
+  const input = document.getElementById("botInput");
+  const msg = input.value.trim();
+  if(!msg) return;
+  addBotMsg(msg, "user");
+  input.value = "";
+  setTimeout(()=> addBotMsg(answerBotQuery(msg), "bot"), 250);
+}
+
+function findBranchInText(low){
+  const order = ["ai & ds","cse","it","ece","eee","mech","civil"];
+  for(const b of order){ if(low.includes(b)) return Object.keys(BRANCH_ADJ).find(k=>k.toLowerCase()===b); }
+  return "CSE";
+}
+function findCommunityInText(low){
+  const order = ["sca","st","sc","bcm","mbc","bc","oc"];
+  for(const c of order){ if(new RegExp("\\b"+c+"\\b").test(low)) return c.toUpperCase(); }
+  return "OC";
+}
+function findDistrictInText(low){
+  return DISTRICTS.find(d=> low.includes(d.toLowerCase()));
+}
+function findFocusInText(low){
+  if(low.includes("placement")) return "Placement";
+  if(low.includes("skill")) return "Skill Development";
+  if(low.includes("academic")||low.includes("research")) return "Academic Excellence";
+  if(low.includes("afford")||low.includes("cheap")||low.includes("low fee")) return "Affordable";
+  return null;
+}
+
+function answerBotQuery(raw){
+  const low = raw.toLowerCase();
+  const numMatch = low.match(/(\d{2,3}(\.\d+)?)/);
+
+  // cutoff-based query
+  if(numMatch){
+    const cutoff = parseFloat(numMatch[1]);
+    if(cutoff>0 && cutoff<=200){
+      const branch = findBranchInText(low);
+      const community = findCommunityInText(low);
+      const district = findDistrictInText(low);
+      let results = predict(cutoff, community, branch);
+      if(district) results = results.filter(r=>r.col.district===district);
+      const safe = results.filter(r=>r.category==="safe").slice(0,4);
+      const mod = results.filter(r=>r.category==="moderate").slice(0,3);
+      if(safe.length===0 && mod.length===0){
+        return `For ${cutoff} marks (${community}, ${branch}${district? ", "+district:""}), I couldn't find safe/moderate matches in the sample dataset — try the Predict tab with a wider district range, or a different branch.`;
+      }
+      let out = `For ${cutoff} marks (${community}, ${branch}${district? ", "+district:""}):\n`;
+      if(safe.length) out += `Safe: ${safe.map(r=>r.col.name.split(",")[0]).join(", ")}. `;
+      if(mod.length) out += `Moderate: ${mod.map(r=>r.col.name.split(",")[0]).join(", ")}.`;
+      out += " Open the Predict tab for full details and reasons.";
+      return out;
+    }
+  }
+
+  // hostel query
+  if(low.includes("hostel")){
+    const district = findDistrictInText(low);
+    let list = COLLEGES.filter(c=>c.hostel && (!district || c.district===district));
+    list = list.slice(0,6);
+    return (district? `Colleges with hostel facilities in ${district}: `:`Colleges with hostel facilities (sample): `) + list.map(c=>c.name.split(",")[0]).join(", ") + ". Check Explore tab to filter by district.";
+  }
+
+  // placement query
+  if(low.includes("placement") || low.includes("package") || low.includes("salary")){
+    const top = [...COLLEGES].sort((a,b)=>b.placement-a.placement).slice(0,5);
+    return "Colleges with the strongest placement record in this dataset: " + top.map(c=>`${c.name.split(",")[0]} (${c.placement}%)`).join(", ") + ". You can filter by 'Placement' strength in the Explore tab.";
+  }
+
+  // affordability / government query
+  if(low.includes("afford") || low.includes("cheap") || low.includes("low fee") || low.includes("government")){
+    const list = COLLEGES.filter(c=>c.type==="Government").sort((a,b)=>a.fee-b.fee).slice(0,6);
+    return "Government colleges tend to be the most affordable option: " + list.map(c=>c.name.split(",")[0]).join(", ") + ". Filter Type = Government in Explore for the full list.";
+  }
+
+  // focus/strength query
+  const focus = findFocusInText(low);
+  if(focus){
+    const list = COLLEGES.filter(c=>(c.focus||[]).includes(focus)).slice(0,6);
+    return `Colleges known for ${focus}: ` + list.map(c=>c.name.split(",")[0]).join(", ") + ". Use the Strength filter in Explore to see all of them.";
+  }
+
+  // what is cutoff / how does this work
+  if(low.includes("what is") || low.includes("cutoff mean") || low.includes("how") && low.includes("cutoff")){
+    return "Your TNEA cutoff is (Maths + Physics/2 + Chemistry/2), out of 200. Each college+branch has a closing cutoff from last year's counselling; I compare your mark against that to label a college Safe, Moderate, or Dream. Try the Predict tab with your actual cutoff, community, and branch.";
+  }
+
+  if(low.includes("hi")||low.includes("hello")||low.includes("hey")||low.includes("vanakkam")){
+    return "Hi! Tell me your cutoff, community and branch (e.g. \"178 BC ECE\") and I'll suggest colleges, or ask about hostels, placements, or affordable options.";
+  }
+
+  return "I can help with cutoff-based predictions (e.g. \"180 OC CSE\"), hostel availability, placement records, or affordable/government options. Try one of the quick questions below, or use the Predict / Explore tabs for full detail.";
+}
+</script>
+</body>
+</html>
